@@ -1,0 +1,17 @@
+[package]
+name = "voxels"
+version = "0.1.0"
+authors = ["ashneverdawn <ashneverdawn@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+flatbuffers = "2.0.0"
+bytes = "0.5.6"
+noise = "0.7.0"
+num-traits = "0.2.12"
+num-derive = "0.3.2"
+hashbrown = "0.11"
+
+parry3d = "0.7"
