@@ -273,7 +273,7 @@ impl ChunkManager {
       is_default: true,
     };
 
-    let mut is_air = false;
+    let mut has_air = false;
     let mut has_value = false;
     let mut data = Vec::new();
 
@@ -317,8 +317,8 @@ impl ChunkManager {
             && octree_z <= end - 1
           {
             if voxel == 0 {
-              is_air = true;
-              println!("{} {} {}", octree_x, octree_y, octree_z);
+              has_air = true;
+              // println!("{} {} {}", octree_x, octree_y, octree_z);
             }
             if voxel == 1 {
               has_value = true;
@@ -335,13 +335,13 @@ impl ChunkManager {
     /*
       TODO: Have to update mode detector
     */
-    if (!is_air && has_value) || (is_air && !has_value) {
+    if (!has_air && has_value) || (has_air && !has_value) {
       chunk.mode = ChunkMode::Air;  // Should be renamed as empty
     }
-    if is_air && has_value {
+    if has_air && has_value {
       chunk.mode = ChunkMode::Loaded;
     }
-    // println!("{} {} {}", is_air, has_value, end - 2);
+    // println!("{} {} {}", has_air, has_value, end - 2);
     chunk
   }
 
