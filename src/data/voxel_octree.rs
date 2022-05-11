@@ -823,7 +823,6 @@ fn get_num_key(key: &Vec<u8>) -> usize {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::voxel::chunk::chunk_manager::ChunkManager;
 
   #[test]
   fn test_get_voxel() -> Result<(), String> {
@@ -1746,105 +1745,6 @@ mod tests {
     for (index, value) in expected.iter().enumerate() {
       assert_eq!(value, &octree.data[index], "At index {}", index);
     }
-    Ok(())
-  }
-
-  /* FOR TESTING ONLY */
-  #[test]
-  fn test_set_voxel_new_from_3d_compute_mesh() -> Result<(), String> {
-    let mut manager = ChunkManager::default();
-    let seamless_size = manager.seamless_size();
-    let chunk = manager.new_chunk3(&[4, -1, 5], manager.depth as u8);
-
-    chunk
-      .octree
-      .compute_mesh(VoxelMode::SurfaceNets, &[0.0, 0.0, 0.0]);
-
-    Ok(())
-  }
-
-  #[test]
-  fn test_key_to_index_depth4() -> Result<(), String> {
-    let size = 8;
-    let depth = 4;
-
-    let mut map: HashMap<usize, [u8; 3]> = HashMap::new();
-    for x in 0..size as u8 {
-      for y in 0..size as u8 {
-        for z in 0..size as u8 {
-          let coord = [x, y, z];
-          for d in 0..depth {
-            let test = &coord[0..d].to_vec();
-            let index = get_num_key(test);
-            let val = map.get(&index);
-            if val.is_some() {
-              // let values = val.unwrap();
-              // let mut same_key = true;
-              // for i in 0..test.len() {
-              //   same_key = values[i] != test[i];
-              // }
-              // if same_key {
-              //   println!("{:?} {}", test, index);
-              //   assert!(false, "already exists {:?} {:?} {}", val.unwrap(), [x, y, z], index);
-              // }
-            } else {
-              map.insert(index, [x, y, z]);
-              // println!("{:?} {}", test, index);
-            }
-          }
-        }
-      }
-    }
-    Ok(())
-  }
-
-  #[test]
-  fn test_key_to_index_depth5() -> Result<(), String> {
-    let size = 8;
-    let depth = 5;
-
-    let mut map: HashMap<usize, [u8; 3]> = HashMap::new();
-    for x in 0..size as u8 {
-      for y in 0..size as u8 {
-        for z in 0..size as u8 {
-          for w in 0..size as u8 {
-            let coord = [x, y, z, w];
-            for d in 0..depth {
-              let test = &coord[0..d].to_vec();
-              let index = get_num_key(test);
-              let val = map.get(&index);
-              if val.is_some() {
-                let values = val.unwrap();
-                let mut same_key = true;
-                for i in 0..test.len() {
-                  same_key = values[i] != test[i];
-                }
-                if same_key {
-                  // println!("{:?} {}", test, index);
-                  // assert!(false, "already exists {:?} {:?} {}", val.unwrap(), [x, y, z], index);
-                }
-                //
-              } else {
-                map.insert(index, [x, y, z]);
-                // println!("{:?} {}", test, index);
-              }
-            }
-          }
-        }
-      }
-    }
-    Ok(())
-  }
-
-  #[test]
-  fn test_calculate_layer_mappings() -> Result<(), String> {
-    let default_value = 9;
-    let depth = 3;
-    // let data = vec![3, 9, 17, 9, 9, 17, 1, 9, 9, 9, 17, 17, 1, 1, 2, 3, 5, 4];
-    let data = vec![3, 9, 17, 9, 9, 17, 1, 9, 9, 9, 17, 17, 1, 1, 2, 3, 4, 5];
-    let mut octree = VoxelOctree::new_from_bytes(data);
-    println!("{:?}", octree.data);
-    println!("{:?}", octree.layer_mappings);
     Ok(())
   }
 }

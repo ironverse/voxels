@@ -13,5 +13,4 @@ noise = "0.7.0"
 num-traits = "0.2.12"
 num-derive = "0.3.2"
 hashbrown = "0.11"
-
 parry3d = "0.7"

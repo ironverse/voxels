@@ -627,7 +627,6 @@ pub struct OctreeCoord {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::voxel::{chunk::chunk_manager::ChunkManager, surface_nets::create_collider_mesh};
 
   #[test]
   fn test_coord_to_index1() -> Result<(), String> {
@@ -710,39 +709,6 @@ mod tests {
       let result = world_pos_to_octree_coord(pos, seamless_size);
       assert_eq!(result.key, expected[i].key, "Wrong key at index {}", i);
       assert_eq!(result.local, expected[i].local, "Wrong local at index {}", i);
-    }
-
-    Ok(())
-  }
-
-
-  /* TODO: Deferred unit tests, have to prove first */
-  #[test]
-  fn test_create_collider_mesh() -> Result<(), String> {
-    
-    let lod = 4;
-    let keys = vec![[0, -1, 2]];
-    let mut chunk_manager = ChunkManager::default();
-
-    let noise = chunk_manager.noise.clone();
-    let seamless_size = chunk_manager.seamless_size();
-    for key in keys.iter() {
-      let mut chunk = ChunkManager::new_chunk4(&key, lod, lod as u8 - 1, noise);
-
-      let mesh = chunk.octree.compute_mesh2(VoxelMode::SurfaceNets);
-      let collider = create_collider_mesh(&chunk.octree);
-      // println!("collider {:?}", collider.positions);
-      for pos in collider.positions.iter() {
-        // println!("pos {:?}", pos.coords.data.as_slice());
-      }
-      for pos in mesh.positions.iter() {
-        println!("pos1 {:?}", pos);
-      }
-      println!(
-        "len {} {} {} {}", 
-        collider.positions.len(), mesh.positions.len(),
-        collider.indices.len(), mesh.indices.len() / 3
-      );
     }
 
     Ok(())

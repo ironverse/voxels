@@ -97,7 +97,9 @@ fn get_local_key(&key: &[i64; 3], size: u32) -> [i64; 3] {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use crate::chunk::chunk_manager::Chunk;
+
+use super::*;
 
   #[test]
   fn test_get_local_key() -> Result<(), String> {
