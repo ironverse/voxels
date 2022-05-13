@@ -540,7 +540,6 @@ fn set_indices2(
   let grid_coord = &[x, y, z];
   set_indices_x(
     indices,
-    octree,
     grid_pos,
     grid_coord,
     start,
@@ -552,7 +551,6 @@ fn set_indices2(
 
   set_indices_y(
     indices,
-    octree,
     grid_pos,
     grid_coord,
     start,
@@ -564,7 +562,6 @@ fn set_indices2(
 
   set_indices_z(
     indices,
-    octree,
     grid_pos,
     grid_coord,
     start,
@@ -590,7 +587,6 @@ fn set_indices2(
 */
 fn set_indices_x(
   indices: &mut Vec<u32>,
-  octree: &VoxelOctree,
   grids: &Vec<GridPosition>,
   grid_coord: &[u32; 3],
   start: u32,
@@ -636,7 +632,8 @@ fn set_indices_x(
       } 
       
       // println!("grid_coord {:?}", grid_coord);
-      let end_index = octree.get_size() - 2;
+      // let end_index = octree.get_size() - 2;
+      let end_index = voxel_end - 2;
       if face_right && x != end_index {
         indices.push(current);
         indices.push(back);
@@ -652,7 +649,6 @@ fn set_indices_x(
 
 fn set_indices_y(
   indices: &mut Vec<u32>,
-  octree: &VoxelOctree,
   grids: &Vec<GridPosition>,
   grid_coord: &[u32; 3],
   start: u32,
@@ -694,7 +690,8 @@ fn set_indices_y(
         indices.push(right_back);
       } 
       
-      let end = octree.get_size() - 2;
+      // let end_index = octree.get_size() - 2;
+      let end_index = voxel_end - 2;
       if face_down && y != end {
         indices.push(current);
         indices.push(right);
@@ -711,7 +708,6 @@ fn set_indices_y(
 
 fn set_indices_z(
   indices: &mut Vec<u32>,
-  octree: &VoxelOctree,
   grids: &Vec<GridPosition>,
   grid_coord: &[u32; 3],
   start: u32,
@@ -755,7 +751,8 @@ fn set_indices_z(
         indices.push(down);
       }
 
-      let end_index = octree.get_size() - 2;
+      // let end_index = octree.get_size() - 2;
+      let end_index = voxel_end - 2;
       if face_back && z != end_index { // Face backward
         // Counter-clockwise
         indices.push(current);
