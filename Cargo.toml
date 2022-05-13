@@ -14,3 +14,10 @@ num-traits = "0.2.12"
 num-derive = "0.3.2"
 hashbrown = "0.11"
 parry3d = "0.7"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "benches"
+harness = false
