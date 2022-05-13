@@ -62,8 +62,7 @@ pub struct ChunkManager {
   pub frequency: f64,
 
   // Probably need to put somewhere server and client can access
-  pub lod_dist0: i64,
-  pub lod_dist1: i64,
+  pub lod_dist: Vec<i64>,
   pub ray_dist: i64,
   pub deployment: Deployment,
 }
@@ -82,8 +81,7 @@ impl Default for ChunkManager {
       height_scale: 16.0,
       frequency: 0.0125,
 
-      lod_dist0: 5,
-      lod_dist1: 10,
+      lod_dist: vec![4, 12],
       ray_dist: 5,
       deployment: Deployment::Production,
     }
