@@ -363,8 +363,7 @@ pub fn delta_keys_minmax(
   cur_key: &[i64; 3],
   min: i64,
   max: i64,
-  lod: i64,
-) -> Vec<[i64; 4]> {
+) -> Vec<[i64; 3]> {
   let mut keys_around = Vec::new();
   let start = -max;
   let end = max + 1;
@@ -379,7 +378,7 @@ pub fn delta_keys_minmax(
         let chunk = [c_x, c_y, c_z];
         // Getting outer delta
         if in_range(cur_key, &chunk, max) && !in_range(prev_key, &chunk, max) {
-          let chunk_key = [c_x, c_y, c_z, lod];
+          let chunk_key = [c_x, c_y, c_z];
           keys_around.push(chunk_key);
           continue;
         }
@@ -389,7 +388,7 @@ pub fn delta_keys_minmax(
           && !in_range(cur_key, &chunk, min)
           && in_range(prev_key, &chunk, min)
         {
-          let chunk_key = [c_x, c_y, c_z, lod];
+          let chunk_key = [c_x, c_y, c_z];
           keys_around.push(chunk_key);
         }
       }
