@@ -387,6 +387,9 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
           z,
           start,
           end,
+          &voxels,
+          voxel_start,
+          voxel_end,
           &grid_pos,
           &mut indices
         );
@@ -528,6 +531,9 @@ fn set_indices2(
   z: u32, // Grid coord of VoxelOctree
   start: u32,
   end: u32,
+  voxels: &Vec<u8>,
+  voxel_start: u32,
+  voxel_end: u32,
   grid_pos: &Vec<GridPosition>,
   indices: &mut Vec<u32>
 ) {
@@ -538,7 +544,10 @@ fn set_indices2(
     grid_pos,
     grid_coord,
     start,
-    end
+    end,
+    voxels,
+    voxel_start,
+    voxel_end
   );
 
   set_indices_y(
@@ -547,7 +556,10 @@ fn set_indices2(
     grid_pos,
     grid_coord,
     start,
-    end
+    end,
+    voxels,
+    voxel_start,
+    voxel_end
   );
 
   set_indices_z(
@@ -556,7 +568,10 @@ fn set_indices2(
     grid_pos,
     grid_coord,
     start,
-    end
+    end,
+    voxels,
+    voxel_start,
+    voxel_end
   );
 }
 
@@ -580,6 +595,9 @@ fn set_indices_x(
   grid_coord: &[u32; 3],
   start: u32,
   end: u32,
+  voxels: &Vec<u8>,
+  voxel_start: u32,
+  voxel_end: u32,
 ) {
   /*
     Inverted right hand rule detection creation of mesh
@@ -595,8 +613,14 @@ fn set_indices_x(
     let y = grid_coord[1];
     let z = grid_coord[2];
 
-    let face_left = octree.get_voxel(x, y, z) == 1; // Current
-    let face_right = octree.get_voxel(x + 1, y, z) == 1; // Left
+    // let face_left = octree.get_voxel(x, y, z) == 1; // Current
+    // let face_right = octree.get_voxel(x + 1, y, z) == 1; // Left
+
+    let index = coord_to_index(x, y, z, voxel_start, voxel_end); // Current
+    let face_left = voxels[index] == 1;
+
+    let index = coord_to_index(x + 1, y, z, voxel_start, voxel_end); // Left
+    let face_right = voxels[index] == 1;
 
     let create = face_left ^ face_right;  // Only one should be true
     if create {
@@ -633,6 +657,9 @@ fn set_indices_y(
   grid_coord: &[u32; 3],
   start: u32,
   end: u32,
+  voxels: &Vec<u8>,
+  voxel_start: u32,
+  voxel_end: u32,
 ) {
 
   let current = coord_to_index2(grids, &grid_coord, &CURRENT, start, end);
@@ -645,8 +672,14 @@ fn set_indices_y(
     let y = grid_coord[1];
     let z = grid_coord[2];
 
-    let face_up = octree.get_voxel(x, y, z) == 1; // Grid voxel below
-    let face_down = octree.get_voxel(x, y + 1, z) == 1; // Grid voxel on top
+    // let face_up = octree.get_voxel(x, y, z) == 1;
+    // let face_down = octree.get_voxel(x, y + 1, z) == 1; 
+
+    let index = coord_to_index(x, y, z, voxel_start, voxel_end); // Grid voxel below: Note: Should be current?
+    let face_up = voxels[index] == 1;
+
+    let index = coord_to_index(x, y + 1, z, voxel_start, voxel_end); // Grid voxel on top
+    let face_down = voxels[index] == 1;
 
     let create = face_up ^ face_down;
     if create {
@@ -683,6 +716,9 @@ fn set_indices_z(
   grid_coord: &[u32; 3],
   start: u32,
   end: u32,
+  voxels: &Vec<u8>,
+  voxel_start: u32,
+  voxel_end: u32,
 ) {
 
   let current = coord_to_index2(grids, &grid_coord, &CURRENT, start, end);
@@ -694,8 +730,15 @@ fn set_indices_z(
     let x = grid_coord[0];
     let y = grid_coord[1];
     let z = grid_coord[2];
-    let face_front = octree.get_voxel(x, y, z) == 1; // Current
-    let face_back = octree.get_voxel(x, y, z + 1) == 1; // Forward
+
+    // let face_front = octree.get_voxel(x, y, z) == 1; // Current
+    // let face_back = octree.get_voxel(x, y, z + 1) == 1; // Forward
+
+    let index = coord_to_index(x, y, z, voxel_start, voxel_end); // Current
+    let face_front = voxels[index] == 1;
+
+    let index = coord_to_index(x, y, z + 1, voxel_start, voxel_end); // Forward
+    let face_back = voxels[index] == 1;
     
     // For now, never allow if both have values, defer solving it later
     let create = face_front ^ face_back;

@@ -138,8 +138,8 @@ pub fn create_collider_mesh(octree: &VoxelOctree) -> MeshColliderData {
 
 fn get_average_vertex_pos(
   voxels: &Vec<u8>,
-  start: u32,
-  end: u32,
+  voxel_start: u32,
+  voxel_end: u32,
   x: u32,
   y: u32,
   z: u32,
@@ -155,7 +155,7 @@ fn get_average_vertex_pos(
         let corner_y = y_offset + y;
         let corner_z = z_offset + z;
 
-        let index = coord_to_index(corner_x, corner_y, corner_z, start, end);
+        let index = coord_to_index(corner_x, corner_y, corner_z, voxel_start, voxel_end);
         if index >= voxels.len() {
           continue;
         }
