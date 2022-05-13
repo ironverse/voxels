@@ -330,26 +330,7 @@ fn get_indices(
 
 
 /*
-  TODO
-    v0
-      Fix non-seamless creation of mesh
-      Identify how the mesh to be created
-      Readjust the position of the created mesh to the expected mesh
-    v1
-      Revisit identification of setting grid position for seamless mesh creation
-        Can we have positions but never define the indices?
-      Identify the positions
-        Filter everything here so that we don't have to address it when defining indices
-    v2
-      Define the potential positions
-      Define which are value positions
-      Define indices based on filtered positions
-      Issues:
-        Define it later
-    
 
-  Pseudocode
-    ...
 */
 pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
   let mut positions = Vec::new();
@@ -357,6 +338,20 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
   let mut uvs = Vec::new();
   let mut indices = Vec::new();
   let mut grid_pos = Vec::new();
+
+
+  let voxel_start = 0;
+  let voxel_end = octree.get_size();
+  let mut voxels = Vec::new();
+  for x in voxel_start..voxel_end {
+    for y in voxel_start..voxel_end {
+      for z in voxel_start..voxel_end {
+        let voxel = octree.get_voxel(x, y, z);
+        voxels.push(voxel);
+      }
+    }
+  }
+
 
   // Checking for each grid
   let start = 0;
@@ -368,7 +363,7 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
         // Then do the identification for the voxels via octree later
 
         // println!("pos {}, {}, {}", x, y, z);
-        let (pos_op, nor) = get_average_vertex_pos2(octree, x, y, z);
+        let (pos_op, nor) = get_average_vertex_pos2(&voxels, voxel_start, voxel_end, x, y, z);
         grid_pos.push(GridPosition {
           index: u32::MAX,
           pos: pos_op.clone()
@@ -413,7 +408,13 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
  * Should only access 0-14 indices to determine if there is vertex/grid position
  * Checking is using right hand rule
 */
-fn get_average_vertex_pos2(octree: &VoxelOctree, x: u32, y: u32, z: u32
+fn get_average_vertex_pos2(
+  voxels: &Vec<u8>,
+  start: u32,
+  end: u32,
+  x: u32,
+  y: u32,
+  z: u32,
 ) -> (Option<[f32; 3]>, [f32; 3]) {
   let mut avg_pos = None;
   let mut voxel_count = 0;
@@ -425,9 +426,13 @@ fn get_average_vertex_pos2(octree: &VoxelOctree, x: u32, y: u32, z: u32
         let corner_x = x_offset + x;
         let corner_y = y_offset + y;
         let corner_z = z_offset + z;
-        let voxel = octree.get_voxel(corner_x, corner_y, corner_z);
+        
+        let index = coord_to_index(corner_x, corner_y, corner_z, start, end);
+        if index >= voxels.len() {
+          continue;
+        }
+        let voxel = voxels[index];
 
-        // FIXME: Have to modify the condition later
         if voxel > 0 {
           voxel_count += 1;
           let x_index = x_offset;
