@@ -4,7 +4,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 pub fn bench_get_surface_nets(c: &mut Criterion) {
   let depth = 4;
   let default_value = 100;
-  let size = (2 as u32).pow(depth.into());
+  let size = (2 as u32).pow(depth as u32);
   let mut new_value = 0;
   let mut data = Vec::new();
   for x in 0..size {
@@ -15,6 +15,7 @@ pub fn bench_get_surface_nets(c: &mut Criterion) {
       }
     }
   }
+
   let octree = VoxelOctree::new_from_3d_array(
     default_value, 
     depth, 
@@ -29,8 +30,40 @@ pub fn bench_get_surface_nets(c: &mut Criterion) {
   });
 }
 
+pub fn bench_octree_get_voxel(c: &mut Criterion) {
+  c.bench_function("octree_get_voxel", |b| {
+    let depth = 4;
+    let default_value = 100;
+    let tmp_octree = VoxelOctree::new(default_value, depth);
+    let size = tmp_octree.get_size();
+    let mut new_value = 0;
+
+    let mut data = Vec::new();
+    for x in 0..size {
+      for y in 0..size {
+        for z in 0..size {
+          new_value = if new_value == 255 { 0 } else { new_value + 1 };
+          data.push([x, y, z, new_value]);
+        }
+      }
+    }
+    let octree = VoxelOctree::new_from_3d_array(default_value, depth, &data, ParentValueType::Lod);
+
+    b.iter(|| {
+      for x in 0..size {
+        for y in 0..size {
+          for z in 0..size {
+            octree.get_voxel(x, y, z);
+          }
+        }
+      }
+    })
+  });
+}
+
 criterion_group!(
   benches,
   bench_get_surface_nets,
+  bench_octree_get_voxel
 );
 criterion_main!(benches);
