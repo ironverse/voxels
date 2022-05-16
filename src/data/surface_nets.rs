@@ -352,6 +352,7 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
     }
   }
 
+  // return MeshData::default();
 
   // Checking for each grid
   let start = 0;
@@ -372,11 +373,12 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
         let index = grid_pos.len() - 1;
         let grid = &mut grid_pos[index];
         
-        if pos_op.is_none() {
-          continue;
-        }
+        let pos = match pos_op {
+          Some(p) => p,
+          None => continue
+        };
 
-        let pos = pos_op.unwrap();
+        // println!("pos {:?}", pos);
         positions.push(pos);
         grid.index = (positions.len() - 1) as u32;
         
@@ -435,15 +437,14 @@ fn get_average_vertex_pos2(
           continue;
         }
         let voxel = voxels[index];
-
         if voxel > 0 {
           voxel_count += 1;
           let x_index = x_offset;
           let y_index = y_offset << 1;
           let z_index = z_offset << 2;
-          let corner_index = x_index as usize + y_index as usize + z_index as usize;
+          let corner_index = x_index + y_index + z_index;
           // println!("x y z {} {} {}", x_index, y_index, z_index);
-          dists[corner_index] = -1.0;
+          dists[corner_index as usize] = -1.0;
         }
       }
     }
@@ -692,7 +693,7 @@ fn set_indices_y(
       
       // let end_index = octree.get_size() - 2;
       let end_index = voxel_end - 2;
-      if face_down && y != end {
+      if face_down && y != end_index {
         indices.push(current);
         indices.push(right);
         indices.push(back);
