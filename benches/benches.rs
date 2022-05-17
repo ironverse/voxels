@@ -1,4 +1,4 @@
-use voxels::data::voxel_octree::{VoxelOctree, VoxelMode, ParentValueType};
+use voxels::{data::{voxel_octree::{VoxelOctree, VoxelMode, ParentValueType}, surface_nets::{VoxelReuse, GridPosition}}, utils::get_length};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 pub fn bench_get_surface_nets(c: &mut Criterion) {
@@ -23,9 +23,11 @@ pub fn bench_get_surface_nets(c: &mut Criterion) {
     ParentValueType::Lod
   );
 
+  let mut voxel_reuse = VoxelReuse::new(depth as u32, 3);
+
   c.bench_function("get_surface_nets", |b| {
     b.iter(|| {
-      octree.compute_mesh2(VoxelMode::SurfaceNets);
+      octree.compute_mesh2(VoxelMode::SurfaceNets, &mut voxel_reuse);
     })
   });
 }
