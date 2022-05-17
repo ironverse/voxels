@@ -423,6 +423,12 @@ pub fn coord_to_index(x: u32, y: u32, z: u32, start: u32, end: u32) -> usize {
   res as usize
 }
 
+pub fn get_len_by_size(size: u32, loop_count: u32) -> usize {
+  size.pow(loop_count) as usize
+}
+
+
+
 pub fn get_length(depth: u8) -> usize {
   let size = 8;
   let mut len = 0;
@@ -431,6 +437,8 @@ pub fn get_length(depth: u8) -> usize {
   }
   len as usize
 }
+
+
 
 
 pub fn get_chunk_coords(pos: &[i64; 3], voxel: u8) -> Vec<ChunkCoordinate> {
@@ -687,6 +695,27 @@ mod tests {
 
     Ok(())
   }
+
+  #[test]
+  fn test_get_len_by_size() -> Result<(), String> {
+    let size = 14;
+    let loop_count = 3;
+    let len = get_len_by_size(size, loop_count);
+    let mut expected_len = 0;
+    for x in 0..size {
+      for y in 0..size {
+        for z in 0..size {
+          expected_len += 1;
+        }
+      }
+    }
+
+    assert_eq!(len, expected_len);
+    Ok(())
+  }
+
+
+
 
   #[test]
   fn test_local_coord() -> Result<(), String> {

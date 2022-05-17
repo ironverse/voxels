@@ -735,21 +735,21 @@ fn noise_elevation2(x: &i64, z: &i64, middle: &i64, noise: &OpenSimplex) -> i64 
 
 
 /** Compute mesh without setting the position based on the region_key */
-pub fn compute_mesh(
-  chunks: &HashMap<[i64; 3], Chunk>,
-  mode: VoxelMode,
-) -> HashMap<[i64; 3], MeshData> {
-  let mut meshes = HashMap::new();
-  for (key, chunk) in chunks.iter() {
-    let result = chunk.octree.compute_mesh2(mode);
-    // No rendered mesh, can be either empty or fully set(Inner) chunk
-    if result.indices.len() == 0 {
-      continue;
-    }
-    meshes.insert(key.clone(), result);
-  }
-  meshes
-}
+// pub fn compute_mesh(
+//   chunks: &HashMap<[i64; 3], Chunk>,
+//   mode: VoxelMode,
+// ) -> HashMap<[i64; 3], MeshData> {
+//   let mut meshes = HashMap::new();
+//   for (key, chunk) in chunks.iter() {
+//     let result = chunk.octree.compute_mesh2(mode);
+//     // No rendered mesh, can be either empty or fully set(Inner) chunk
+//     if result.indices.len() == 0 {
+//       continue;
+//     }
+//     meshes.insert(key.clone(), result);
+//   }
+//   meshes
+// }
 
 pub fn get_dist(pos1: &[i64; 3], pos2: &[i64; 3]) -> f32 {
   let mut dist_sqr = 0;

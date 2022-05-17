@@ -269,7 +269,7 @@ impl VoxelOctree {
     let mut next_layer_index = 0;
 
     let depth = self.get_depth() as usize;
-    for layer in 0..depth + 1 as usize {
+    for layer in 0..depth + 1 {
       let (layer_start, layer_size) = self.get_layer_section(layer);
       let desc_start = layer_start + layer_size / 2;
       let descriptor_index = desc_start + local_layer_index;
@@ -410,9 +410,9 @@ impl VoxelOctree {
     }
   }
 
-  pub fn compute_mesh2(&self, mode: VoxelMode) -> MeshData {
+  pub fn compute_mesh2(&self, mode: VoxelMode, voxel_reuse: &mut VoxelReuse) -> MeshData {
     match mode {
-      VoxelMode::SurfaceNets => get_surface_nets2(self),
+      VoxelMode::SurfaceNets => get_surface_nets2(self, voxel_reuse),
       _ => panic!("VoxelMode {:?} implementation not existing yet", mode),
     }
   }
