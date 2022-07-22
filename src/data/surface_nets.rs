@@ -29,7 +29,7 @@ impl Default for GridPosition {
   }
 }
 
-
+#[derive(Clone)]
 pub struct VoxelReuse {
   pub voxels: Vec<u8>,
   pub grid_pos: Vec<GridPosition>,
