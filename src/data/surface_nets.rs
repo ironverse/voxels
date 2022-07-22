@@ -1,5 +1,5 @@
 use parry3d::{na::coordinates::X, math::Point};
-use crate::utils::{coord_to_index, Utils};
+use crate::utils::{coord_to_index, Utils, get_length, get_len_by_size};
 use super::voxel_octree::*;
 use crate::data::CUBE_EDGES;
 
@@ -18,10 +18,39 @@ const RIGHT_BACK: [i8; 3] = [-1, 0,-1];
 
 
 #[derive(Clone)]
-struct GridPosition {
-  index: u32,
-  pos: Option<[f32; 3]>,
+pub struct GridPosition {
+  pub index: u32,
+  pub pos: Option<[f32; 3]>,
 }
+
+impl Default for GridPosition {
+  fn default() -> Self {
+    GridPosition { index: u32::MAX, pos: None }
+  }
+}
+
+#[derive(Clone)]
+pub struct VoxelReuse {
+  pub voxels: Vec<u8>,
+  pub grid_pos: Vec<GridPosition>,
+}
+
+impl VoxelReuse {
+  pub fn new(depth: u32, loop_count: u32) -> Self {
+    let size = (2 as u32).pow(depth as u32);
+    let len = get_len_by_size(size, loop_count);
+    let mut voxels = vec![0; len];
+    
+    let grid_pos_len = get_len_by_size(size - 1, loop_count);
+    let mut grid_pos = vec![GridPosition::default(); grid_pos_len];
+
+    VoxelReuse {
+      voxels: voxels,
+      grid_pos: grid_pos
+    }
+  }
+}
+
 
 pub fn get_surface_nets(octree: &VoxelOctree, start_pos: &[f32; 3]) -> MeshData {
   let mut possible_positions = Vec::new();
@@ -332,26 +361,29 @@ fn get_indices(
 /*
 
 */
-pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
+pub fn get_surface_nets2(octree: &VoxelOctree, voxel_reuse: &mut VoxelReuse) -> MeshData {
   let mut positions = Vec::new();
   let mut normals = Vec::new();
   let mut uvs = Vec::new();
   let mut indices = Vec::new();
-  let mut grid_pos = Vec::new();
-
+  // let mut grid_pos = Vec::new();
 
   let voxel_start = 0;
   let voxel_end = octree.get_size();
-  let mut voxels = Vec::new();
+  // let mut voxels = Vec::new();
   for x in voxel_start..voxel_end {
     for y in voxel_start..voxel_end {
       for z in voxel_start..voxel_end {
         let voxel = octree.get_voxel(x, y, z);
-        voxels.push(voxel);
+        // let voxel = 0;
+
+        let index = coord_to_index(x, y, z, voxel_start, voxel_end);
+        voxel_reuse.voxels[index] = voxel;
+
+        // voxels.push(voxel);
       }
     }
   }
-
 
   // Checking for each grid
   let start = 0;
@@ -363,22 +395,29 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
         // Then do the identification for the voxels via octree later
 
         // println!("pos {}, {}, {}", x, y, z);
-        let (pos_op, nor) = get_average_vertex_pos2(&voxels, voxel_start, voxel_end, x, y, z);
-        grid_pos.push(GridPosition {
-          index: u32::MAX,
-          pos: pos_op.clone()
-        });
+        let (pos_op, nor) = get_average_vertex_pos2(&voxel_reuse.voxels, voxel_start, voxel_end, x, y, z);
 
-        let index = grid_pos.len() - 1;
-        let grid = &mut grid_pos[index];
+        let index = coord_to_index(x, y, z, start, end); 
+        voxel_reuse.grid_pos[index].pos = pos_op.clone();
+        voxel_reuse.grid_pos[index].index = u32::MAX;
+
+        // grid_pos.push(GridPosition {
+        //   index: u32::MAX,
+        //   pos: pos_op.clone()
+        // });
+
+        // let index = grid_pos.len() - 1;
+        // let grid = &mut grid_pos[index];
         
-        if pos_op.is_none() {
-          continue;
-        }
+        let pos = match pos_op {
+          Some(p) => p,
+          None => continue
+        };
 
-        let pos = pos_op.unwrap();
+        // println!("pos {:?}", pos);
         positions.push(pos);
-        grid.index = (positions.len() - 1) as u32;
+        voxel_reuse.grid_pos[index].index = (positions.len() - 1) as u32;
+        // grid.index = (positions.len() - 1) as u32;
         
         set_indices2(
           octree,
@@ -387,10 +426,10 @@ pub fn get_surface_nets2(octree: &VoxelOctree) -> MeshData {
           z,
           start,
           end,
-          &voxels,
+          &voxel_reuse.voxels,
           voxel_start,
           voxel_end,
-          &grid_pos,
+          &voxel_reuse.grid_pos,
           &mut indices
         );
         normals.push(nor);
@@ -435,15 +474,14 @@ fn get_average_vertex_pos2(
           continue;
         }
         let voxel = voxels[index];
-
         if voxel > 0 {
           voxel_count += 1;
           let x_index = x_offset;
           let y_index = y_offset << 1;
           let z_index = z_offset << 2;
-          let corner_index = x_index as usize + y_index as usize + z_index as usize;
+          let corner_index = x_index + y_index + z_index;
           // println!("x y z {} {} {}", x_index, y_index, z_index);
-          dists[corner_index] = -1.0;
+          dists[corner_index as usize] = -1.0;
         }
       }
     }
@@ -692,7 +730,7 @@ fn set_indices_y(
       
       // let end_index = octree.get_size() - 2;
       let end_index = voxel_end - 2;
-      if face_down && y != end {
+      if face_down && y != end_index {
         indices.push(current);
         indices.push(right);
         indices.push(back);
@@ -926,7 +964,23 @@ pub fn client_create_mesh(f: fn(&[f32; 3]), octree: &VoxelOctree) -> MeshCollide
 
 
 pub fn create_collider_mesh(octree: &VoxelOctree) -> MeshColliderData {
-  let mesh = get_surface_nets2(octree);
+  let depth = 4;
+  let size = (2 as u32).pow(depth as u32);
+  let len = get_length(depth as u8);
+  let mut voxels = vec![0; len];
+  
+  let grid_pos_len = get_length(size as u8 - 1);
+  let mut grid_pos = Vec::new();
+  for i in 0..grid_pos_len {
+    grid_pos.push(GridPosition::default());
+  }
+
+  let mut voxel_reuse = VoxelReuse {
+    voxels: voxels,
+    grid_pos: grid_pos
+  };
+
+  let mesh = get_surface_nets2(octree, &mut voxel_reuse);
 
   let mut positions = Vec::new();
   let mut indices = Vec::new();

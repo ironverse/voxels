@@ -1,4 +1,4 @@
-use crate::{data::voxel_octree::{VoxelOctree, MeshData, ParentValueType}, utils::get_chunk_coords};
+use crate::{data::{voxel_octree::{VoxelOctree, MeshData, ParentValueType}, surface_nets::VoxelReuse}, utils::get_chunk_coords};
 
 use super::*;
 use hashbrown::HashMap;
@@ -64,12 +64,13 @@ pub struct ChunkManager {
   // Probably need to put somewhere server and client can access
   pub lod_dist: Vec<i64>,
   pub ray_dist: i64,
-  pub deployment: Deployment,
+  pub voxel_reuse: VoxelReuse,
 }
 
 impl Default for ChunkManager {
   fn default() -> Self {
     let depth = 4;
+    let loop_count = 3; // indices/axes being used, [x, y, z]
 
     ChunkManager {
       chunks: HashMap::new(),
@@ -83,7 +84,7 @@ impl Default for ChunkManager {
 
       lod_dist: vec![4, 12],
       ray_dist: 5,
-      deployment: Deployment::Production,
+      voxel_reuse: VoxelReuse::new(depth, loop_count)
     }
   }
 }
@@ -307,20 +308,20 @@ impl ChunkManager {
                 Visible
                   ?
           */
-          if octree_x >= 1
+          if octree_x >= 0
             && octree_x <= end - 1
-            && octree_y >= 1
+            && octree_y >= 0
             && octree_y <= end - 1
-            && octree_z >= 1
+            && octree_z >= 0
             && octree_z <= end - 1
           {
             if voxel == 0 {
               has_air = true;
-              // println!("{} {} {}", octree_x, octree_y, octree_z);
+              // println!("Air {} {} {}", octree_x, octree_y, octree_z);
             }
             if voxel == 1 {
               has_value = true;
-              
+              // println!("Voxel {} {} {}", octree_x, octree_y, octree_z);
             }
           }
         }
@@ -487,7 +488,9 @@ fn is_within_scope_test(x: u32, y: u32, z: u32, region_middle_pos: i64) -> bool 
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use crate::{data::surface_nets::{GridPosition, VoxelReuse}, utils::get_length};
+
+use super::*;
 
   #[test]
   fn test_set_and_get_voxel() -> Result<(), String> {
@@ -526,11 +529,40 @@ mod tests {
 
   #[test]
   fn test_chunk_mode() -> Result<(), String> {
+    let depth = 4;
+    let len = get_length(depth as u8);
+    let mut voxels = vec![0; len];
+    let size = (2 as u32).pow(depth as u32);
+    
+    let grid_pos_len = get_length(size as u8 - 1);
+    let mut grid_pos = Vec::new();
+    for i in 0..grid_pos_len {
+      grid_pos.push(GridPosition ::default());
+    }
+
+    let mut voxel_reuse = VoxelReuse {
+      voxels: voxels,
+      grid_pos: grid_pos
+    };
+
     let chunk_size = 16;
     let mut chunk_manager = ChunkManager::default();
-    let chunk = chunk_manager.new_chunk3(&[0, -1, 2], chunk_manager.depth as u8);
 
-    assert_eq!(chunk.mode, ChunkMode::Loaded);
+    let keys = adjacent_keys(&[0, 0, 0], 5);
+    for key in keys.iter() {
+      let chunk = chunk_manager.new_chunk3(key, chunk_manager.depth as u8);
+      let d = chunk.octree.compute_mesh2(VoxelMode::SurfaceNets, &mut voxel_reuse);
+      if d.indices.len() != 0 {
+        assert_eq!(chunk.mode, ChunkMode::Loaded, "key {:?}", key);
+      } else {
+        assert_eq!(chunk.mode, ChunkMode::Air, "key {:?}", key);
+      }
+    }
+
+    // let key = [-3, -1, 1];
+    // let key = [-5, -1, -2];
+    // let chunk = chunk_manager.new_chunk3(&key, chunk_manager.depth as u8);
+    // assert_eq!(chunk.mode, ChunkMode::Loaded, "key {:?}", key);
 
     Ok(())
   }
